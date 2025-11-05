@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>The AI Quotient (AQ) - Diagnostic</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900;display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -22,11 +22,6 @@
             box-shadow: 0 10px 40px -5px rgba(29, 78, 216, 0.4); 
             border: 1px solid #374151;
             transition: all 0.3s ease;
-        }
-        .score-button {
-            transition: all 0.3s ease-in-out;
-            background-image: linear-gradient(to right, #4c1d95 0%, #1e40af 100%); 
-            box-shadow: 0 0 0 0 rgba(30, 64, 175, 0);
         }
         .score-button:hover {
             box-shadow: 0 8px 30px rgba(30, 64, 175, 0.9); 
@@ -123,16 +118,17 @@
 
     <div id="app" class="w-full max-w-4xl">
         <header class="text-center mb-12">
-            <h1 class="text-6xl font-black mb-3 text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-indigo-600 tracking-tighter">
+            <h1 class="text-4xl sm:text-5xl lg:text-6xl font-black mb-3 text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-indigo-600 tracking-tighter">
                 🔬 AI Quotient (AQ) Diagnostic
             </h1>
-            <p class="text-xl text-gray-400 font-light">
-                Calibrate your personal AI Core and chart your AI development.
+            <p class="text-lg sm:text-xl text-gray-400 font-light">
+                Know your personal AI adoption score:
             </p>
         </header>
 
         <div id="quiz-container" class="p-8 rounded-xl container-card border-l-4 border-indigo-500/50">
             
+            <!-- Progress and Step Counter -->
             <div class="mb-8">
                 <div id="step-counter" class="text-lg font-semibold text-center mb-3">Mission 1 of 10</div>
                 <div id="progress-bar" class="w-full h-2 rounded-full bg-gray-700 overflow-hidden">
@@ -140,9 +136,12 @@
                 </div>
             </div>
 
+            <!-- Single Question Display -->
             <div id="question-display" class="min-h-[250px] transition-all duration-300">
-                </div>
+                <!-- Question will be injected here -->
+            </div>
 
+            <!-- Navigation Buttons -->
             <div class="flex justify-between items-center pt-6 border-t border-gray-700 mt-6">
                 <button id="prev-btn" class="py-2 px-6 bg-gray-700 text-gray-200 font-semibold rounded-full opacity-0 pointer-events-none transition duration-300 hover:bg-gray-600">
                     &larr; Previous Mission
@@ -157,6 +156,7 @@
             </div>
         </div>
 
+        <!-- Result Modal -->
         <div id="result-modal" class="fixed inset-0 bg-gray-900 bg-opacity-95 hidden items-center justify-center p-4 z-50">
             <div class="bg-gray-800 rounded-xl w-full max-w-lg p-10 modal-card border-cyan-500 border-2 shadow-2xl shadow-cyan-900/50 transform transition-all duration-500">
                 
@@ -370,6 +370,9 @@
                         indicator.classList.add('active');
                     }
                 });
+                
+                // --- CONSOLE LOGGING ADDED HERE ---
+                console.log(`[Q${currentStep + 1} State Update] New Value: ${question.levels[levelIndex]} (Index: ${levelIndex}, Points: ${scoreMap[levelIndex]})`);
             }
         }
 
@@ -420,17 +423,20 @@
                     <div class="p-6 bg-gray-900 rounded-xl border border-gray-700 hover:border-indigo-500 transition duration-300">
                         <p class="text-2xl font-bold text-gray-200 mb-6">${q.icon} ${q.text}</p>
                         <div class="space-y-4">
+                            <!-- Slider Input -->
                             <input type="range" id="${q.id}-slider" name="${q.id}" min="0" max="3" value="${q.value}" step="1"
                                     class="w-full h-2 rounded-lg appearance-none cursor-pointer range-lg" required
                                     oninput="updateSliderLabel('${q.id}', this.value)">
                             
+                            <!-- Dynamic Indicator Markers -->
                             <div id="${q.id}-indicators" class="flex justify-between text-xs text-gray-400 font-semibold mt-1 space-x-2">
-                                <span class="level-indicator">L1</span>
-                                <span class="level-indicator">L2</span>
-                                <span class="level-indicator">L3</span>
-                                <span class="level-indicator">L4</span>
+                                <span class="level-indicator">0</span>
+                                <span class="level-indicator">4</span>
+                                <span class="level-indicator">7</span>
+                                <span class="level-indicator">10</span>
                             </div>
 
+                            <!-- Dynamic Label (Displays chosen text description) -->
                             <p id="${q.id}-label" class="text-center text-base font-semibold text-indigo-400 pt-3 border-t border-gray-700 mt-4 min-h-[4rem]">
                                 ${q.levels[q.value]}
                             </p>
@@ -454,15 +460,25 @@
                 }
 
                 updateProgress();
+                // --- CONSOLE LOGGING ADDED HERE ---
+                console.log(`[Navigation] Rendering Mission ${currentStep + 1}: ${q.text}`);
 
             }, 300); // Wait for fade-out to complete
         }
 
         function calculateScore() {
             let totalScore = 0;
-            questions.forEach(q => {
-                totalScore += scoreMap[q.value]; 
+            
+            // --- CONSOLE LOGGING ADDED HERE ---
+            console.log("--- Final Score Calculation Initiated ---");
+            questions.forEach((q, index) => {
+                const score = scoreMap[q.value];
+                totalScore += score; 
+                console.log(`Q${index + 1} (${q.id}): Selected Index ${q.value} -> Score: ${score} Pts`);
             });
+            console.log(`Total AQ Score: ${totalScore}/100`);
+            console.log("-----------------------------------------");
+
             displayResult(totalScore);
         }
 
@@ -500,6 +516,9 @@
                 resultModalEl.classList.remove('hidden');
                 resultModalEl.classList.add('flex');
             }
+            
+            // --- CONSOLE LOGGING ADDED HERE ---
+            console.log(`[Result] Final AQ Level: ${levelData.level} (Score: ${score})`);
         }
 
         document.addEventListener('DOMContentLoaded', () => {
