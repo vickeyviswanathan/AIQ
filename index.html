@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The AI Quotient (AQ) - Diagnostic</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0d111b; /* Deep space background */
+            color: #e5e7eb;
+            /* Subtle hexagonal grid pattern for futuristic feel */
+            background-image: 
+                linear-gradient(to right, #1a202c 1px, transparent 1px), 
+                linear-gradient(to bottom, #1a202c 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+        .container-card {
+            background-color: #151a26; /* Slightly lighter card to contrast with body */
+            box-shadow: 0 10px 40px -5px rgba(29, 78, 216, 0.4); 
+            border: 1px solid #374151;
+            transition: all 0.3s ease;
+        }
+        .score-button {
+            transition: all 0.3s ease-in-out;
+            background-image: linear-gradient(to right, #4c1d95 0%, #1e40af 100%); 
+            box-shadow: 0 0 0 0 rgba(30, 64, 175, 0);
+        }
+        .score-button:hover {
+            box-shadow: 0 8px 30px rgba(30, 64, 175, 0.9); 
+            transform: translateY(-2px) scale(1.02);
+        }
+
+        /* Custom styling for the range input (Slider) */
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+        }
+        input[type=range]:focus {
+            outline: none;
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 10px;
+            cursor: pointer;
+            background: #374151;
+            border-radius: 5px;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.6);
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 24px;
+            width: 24px;
+            border-radius: 50%;
+            background: #6366f1;
+            cursor: pointer;
+            margin-top: -7px; 
+            box-shadow: 0 0 15px rgba(99, 102, 241, 1); 
+            border: 3px solid #1a202c; 
+            transition: all 0.2s ease;
+        }
+        input[type=range]::-webkit-slider-thumb:hover {
+            background: #3b82f6; 
+        }
+
+        /* Modal specific styling */
+        .modal-card {
+            background: radial-gradient(circle at top right, #1e40af40, #151a26 60%);
+        }
+
+        /* Custom styling for the dynamic level indicators */
+        .level-indicator {
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            background-color: #2a3340; 
+            color: #9ca3af; 
+            font-weight: 500;
+            text-align: center;
+        }
+        .level-indicator.active {
+            background-color: #3b82f6; 
+            color: #ffffff; 
+            box-shadow: 0 0 15px #3b82f680; 
+            transform: scale(1.05);
+            font-weight: 700;
+        }
+        
+        /* Score Core Visual */
+        #score-core-visual {
+            position: relative;
+            width: 100%;
+            height: 20px;
+            border-radius: 10px;
+            background-color: #2a3340;
+            overflow: hidden;
+            box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.5);
+        }
+        #score-core-fill {
+            height: 100%;
+            width: 0%;
+            transition: width 1.5s ease-out, background-color 0.5s ease;
+        }
+        
+        /* Animation for question transition */
+        .fade-out {
+            opacity: 0;
+            transform: translateX(-20px);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+        .fade-in {
+            opacity: 1;
+            transform: translateX(0);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+    </style>
+</head>
+<body class="p-4 sm:p-8 min-h-screen flex items-center justify-center">
+
+    <div id="app" class="w-full max-w-4xl">
+        <header class="text-center mb-12">
+            <h1 class="text-6xl font-black mb-3 text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-indigo-600 tracking-tighter">
+                🔬 AI Quotient (AQ) Diagnostic
+            </h1>
+            <p class="text-xl text-gray-400 font-light">
+                Calibrate your personal AI Core and chart your creative development.
+            </p>
+        </header>
+
+        <div id="quiz-container" class="p-8 rounded-xl container-card border-l-4 border-indigo-500/50">
+            
+            <!-- Progress and Step Counter -->
+            <div class="mb-8">
+                <div id="step-counter" class="text-lg font-semibold text-center mb-3">Mission 1 of 10</div>
+                <div id="progress-bar" class="w-full h-2 rounded-full bg-gray-700 overflow-hidden">
+                    <div id="progress-fill" class="h-full bg-cyan-500 transition-all duration-300 ease-in-out"></div>
+                </div>
+            </div>
+
+            <!-- Single Question Display -->
+            <div id="question-display" class="min-h-[250px] transition-all duration-300">
+                <!-- Question will be injected here -->
+            </div>
+
+            <!-- Navigation Buttons -->
+            <div class="flex justify-between items-center pt-6 border-t border-gray-700 mt-6">
+                <button id="prev-btn" class="py-2 px-6 bg-gray-700 text-gray-200 font-semibold rounded-full opacity-0 pointer-events-none transition duration-300 hover:bg-gray-600">
+                    &larr; Previous Mission
+                </button>
+                <button id="next-btn" class="py-2 px-6 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-full transition duration-300">
+                    Next Mission &rarr;
+                </button>
+                <button id="calculate-btn"
+                        class="py-2 px-6 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-full transition duration-300 hidden">
+                    Initiate Core Diagnostic
+                </button>
+            </div>
+        </div>
+
+        <!-- Result Modal -->
+        <div id="result-modal" class="fixed inset-0 bg-gray-900 bg-opacity-95 hidden items-center justify-center p-4 z-50">
+            <div class="bg-gray-800 rounded-xl w-full max-w-lg p-10 modal-card border-cyan-500 border-2 shadow-2xl shadow-cyan-900/50 transform transition-all duration-500">
+                
+                <h2 class="text-3xl font-extrabold text-center mb-4 text-cyan-400 border-b border-cyan-700 pb-3">
+                    AQ CORE STATUS: ONLINE
+                </h2>
+                
+                <div class="text-center my-8">
+                    <p class="text-lg font-bold text-gray-400 mb-2">Total AI Core Integrity</p>
+                    <div id="score-core-visual" class="mb-4">
+                        <div id="score-core-fill"></div>
+                    </div>
+                    <p class="text-5xl font-black text-indigo-400 mb-2 tracking-tighter">
+                        <span id="final-score">0</span> / 100
+                    </p>
+                    <p id="result-level" class="text-2xl font-bold px-5 py-2 inline-block rounded-full shadow-xl uppercase"></p>
+                </div>
+                
+                <h3 class="text-xl font-bold text-gray-300 mb-3 border-b border-gray-700 pb-2">🎯 Primary Augmentation Target for <span id="level-name-feedback" class="text-cyan-400"></span>:</h3>
+                
+                <h4 id="action-title" class="text-lg font-extrabold text-indigo-400 mt-4 mb-2"></h4>
+                <p id="result-feedback" class="text-gray-300 leading-relaxed text-base"></p>
+
+                <div class="mt-8 text-center border-t border-gray-700 pt-6">
+                    <button id="close-modal-btn"
+                            class="py-3 px-8 bg-gray-700 text-gray-200 font-semibold rounded-full hover:bg-gray-600 transition duration-200 focus:outline-none focus:ring-2 focus:ring-gray-500 shadow-md">
+                        Close Diagnostic
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const scoreMap = [0, 4, 7, 10];
+        let currentStep = 0; 
+        
+        const questions = [
+            {
+                id: 'q1',
+                icon: '🚀',
+                text: "Creative Launch: When you face a new task, what is your default creative instinct?",
+                levels: [
+                    "Bypass (0 Pts): I rely only on my internal knowledge/ideas.", 
+                    "Check (4 Pts): I generate my idea first, then validate it with AI.", 
+                    "Brainstorm (7 Pts): I prompt the AI to explore several creative directions before I choose one.", 
+                    "Primal (10 Pts): I treat AI as a mandated creative spark for all concept generation."
+                ],
+                value: 0
+            },
+            {
+                id: 'q2',
+                icon: '💡',
+                text: "Iterative Refinement: What is your typical response to the AI's first output?",
+                levels: [
+                    "Accept (0 Pts): I usually take the first result as final.", 
+                    "Tweak (4 Pts): I adjust minor wording/format manually.", 
+                    "Steer (7 Pts): I use targeted feedback ('Make it X, not Y') to force major refinement.", 
+                    "Master (10 Pts): I treat the first output as a base and iteratively refine it into something only I could achieve."
+                ],
+                value: 0
+            },
+            {
+                id: 'q3',
+                icon: '🔄',
+                text: "Flow State Integration: When moving between your human work and AI augmentation, what is the experience like?",
+                levels: [
+                    "Manual (0 Pts): Copy/paste, disruptive context-switching.", 
+                    "Clunky (4 Pts): Using separate browser tabs/apps frequently.", 
+                    "Smooth (7 Pts): AI is accessible directly within my main workspace/app.", 
+                    "Fluid (10 Pts): I use custom hotkeys/automations that make augmentation feel like a single thought."
+                ],
+                value: 0
+            },
+            {
+                id: 'q4',
+                icon: '🛡️',
+                text: "Risk & Trust: How do you balance creative speed against data security and originality checks?",
+                levels: [
+                    "Trust (0 Pts): Speed is everything; I assume the output is safe.", 
+                    "Cautious (4 Pts): I avoid sensitive data, but assume originality.", 
+                    "Vigilant (7 Pts): I run secondary checks for critical outputs and never input proprietary ideas.", 
+                    "Zero-Trust (10 Pts): I treat AI output as an idea source, always rewriting the final result for maximum originality and security."
+                ],
+                value: 0
+            },
+            {
+                id: 'q5',
+                icon: '🔭',
+                text: "Future-Proofing: When a massive new AI feature drops, what is your adoption instinct?",
+                levels: [
+                    "Ignore (0 Pts): I wait until it's standard practice or required.", 
+                    "Monitor (4 Pts): I watch from the sidelines for others to prove the value.", 
+                    "Test (7 Pts): I immediately reserve 1-2 hours to test its core limitations and applications for me.", 
+                    "Exploit (10 Pts): I see it as an immediate competitive advantage and integrate it into a workflow within 24 hours."
+                ],
+                value: 0
+            },
+            {
+                id: 'q6',
+                icon: '🧩',
+                text: "Multi-Tool Synthesis: How do you solve complex problems that require several distinct AI capabilities?",
+                levels: [
+                    "One (0 Pts): I stick to one general chatbot for everything.", 
+                    "Two (4 Pts): I use two separate tools for different functions (e.g., chat for writing, tool for coding).", 
+                    "Three (7 Pts): I chain three or more tools together to handle different stages (e.g., summary -> image -> analysis).", 
+                    "Systemic (10 Pts): I custom-build workflows combining several specialized AIs to achieve a single, complex result."
+                ],
+                value: 0
+            },
+            {
+                id: 'q7',
+                icon: '🧭',
+                text: "Complexity Navigation: When tackling a problem far outside your expertise, what does the AI provide?",
+                levels: [
+                    "Confused (0 Pts): The AI output is usually too complex or generic to use.", 
+                    "Basic (4 Pts): It gives me definitions and external links.", 
+                    "Strategic (7 Pts): It identifies the 3-5 core concepts and outlines a learning path.", 
+                    "Augmented (10 Pts): It structures the entire problem, defines a solution framework, and creates the first deliverable step for me."
+                ],
+                value: 0
+            },
+            {
+                id: 'q8',
+                icon: '💬',
+                text: "Prompt Language: What is the defining characteristic of the language you use when instructing AI?",
+                levels: [
+                    "Vague (0 Pts): Informal, short, and ambiguous commands.", 
+                    "Direct (4 Pts): Explicit instructions, but lacking context or role-play.", 
+                    "Persona (7 Pts): I assign a specific role ('Act as a CEO...') and format to the request.", 
+                    "Engineering (10 Pts): I structure prompts like code: defining context, constraints, input, and desired output format precisely."
+                ],
+                value: 0
+            },
+            {
+                id: 'q9',
+                icon: '📈',
+                text: "Value Extraction: How effectively do you use AI to multiply the value of a single source document (e.g., meeting notes)?",
+                levels: [
+                    "Minimal (0 Pts): I get one summary and stop.", 
+                    "Duplicate (4 Pts): I get the summary and a key points list.", 
+                    "Multiply (7 Pts): I generate a summary, action list, email update, and 1-2 different creative ideas.", 
+                    "Maximize (10 Pts): I systematically extract 5+ distinct, value-driven assets from all high-context information."
+                ],
+                value: 0
+            },
+            {
+                id: 'q10',
+                icon: '🌟',
+                text: "Impact: How clearly can you articulate the role of AI in a major personal/career transformation?",
+                levels: [
+                    "Minimal (0 Pts): I can't think of a major change.", 
+                    "Small (4 Pts): I save time on basic chores (e.g., formatting).", 
+                    "Significant (7 Pts): I've completed a major project that would have been impossible without AI.", 
+                    "Defining (10 Pts): AI has fundamentally changed my job role, income stream, or creative output."
+                ],
+                value: 0
+            }
+        ];
+
+        const adoptionLevels = [
+            {
+                level: "The Latent Core (AQ 1)",
+                range: [0, 40],
+                actionTitle: "Objective: Activate Baseline Creativity",
+                color: 'bg-red-500',
+                feedback: "Your Core is dormant. You are aware of AI's power but are not using it to amplify your creative decisions. Your next mission is to treat AI as a mandated partner for initial concept generation. Every time you start a new task, ask AI for three ideas you would never think of. Stop auditing, start creating.",
+                coreColor: '#ef4444' // Red
+            },
+            {
+                level: "The Firing Core (AQ 2)",
+                range: [41, 65],
+                actionTitle: "Objective: Master Iterative Refinement",
+                color: 'bg-yellow-500',
+                feedback: "Your Core is active but running on basic fuel. You are using AI for efficiency, but not yet for superior creative outcomes. Your next mission is Instinct Refusal (Q2). Never accept the first output. Use specific, detailed negative feedback (e.g., 'Too generic, make it more aggressive') to push the AI past its default setting. Learn to demand excellence.",
+                coreColor: '#f59e0b' // Yellow
+            },
+            {
+                level: "The Calibrated Core (AQ 3)",
+                range: [66, 85],
+                actionTitle: "Objective: Achieve Workflow Fluidity",
+                color: 'bg-green-500',
+                feedback: "Your Core is stable and augmented. You understand complexity but still experience friction in your process. Your next mission is to achieve Flow State Integration (Q3) and Multi-Tool Synthesis (Q6). Find an organizational tool (notes, project management) and deeply integrate your favorite AI tools into it, chaining capabilities to eliminate all manual copy/paste steps.",
+                coreColor: '#10b981' // Green
+            },
+            {
+                level: "The Integrated Core (AQ 4)",
+                range: [86, 100],
+                actionTitle: "Objective: Scale and Pioneer the Edge",
+                color: 'bg-indigo-600',
+                feedback: "Your Core is operating at peak capacity. AI is fundamental to your creative, strategic, and professional output. Your next mission is to focus on Future-Proofing (Q5). Research and build a small test project using a technology you haven't touched (e.g., generative AI for video, custom agent creation). Your edge must always be the frontier.",
+                coreColor: '#4f46e5' // Indigo
+            }
+        ];
+
+        // Function to update the label beneath the slider dynamically
+        function updateSliderLabel(qId, step) {
+            const question = questions.find(q => q.id === qId);
+            const levelIndex = parseInt(step);
+            const labelEl = document.getElementById(`${qId}-label`);
+            const indicatorEls = document.querySelectorAll(`#${qId}-indicators .level-indicator`);
+            
+            if (question && labelEl) {
+                labelEl.textContent = question.levels[levelIndex];
+                // Save value to question object immediately
+                question.value = levelIndex;
+
+                indicatorEls.forEach((indicator, index) => {
+                    indicator.classList.remove('active');
+                    if (index === levelIndex) {
+                        indicator.classList.add('active');
+                    }
+                });
+            }
+        }
+
+        function getCoreColor(score) {
+            const percentage = score / 100;
+            if (percentage <= 0.40) return adoptionLevels[0].coreColor;
+            if (percentage <= 0.65) return adoptionLevels[1].coreColor;
+            if (percentage <= 0.85) return adoptionLevels[2].coreColor;
+            return adoptionLevels[3].coreColor;
+        }
+
+        function updateProgress() {
+            const total = questions.length;
+            const completed = currentStep + 1;
+            const percentage = (completed / total) * 100;
+
+            document.getElementById('step-counter').textContent = `Mission ${completed} of ${total}`;
+            document.getElementById('progress-fill').style.width = `${percentage}%`;
+
+            // Navigation button logic
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            const calculateBtn = document.getElementById('calculate-btn');
+
+            // Toggle Previous button
+            prevBtn.classList.toggle('opacity-0', currentStep === 0);
+            prevBtn.classList.toggle('pointer-events-none', currentStep === 0);
+
+            // Toggle Next/Calculate button
+            if (currentStep === total - 1) {
+                nextBtn.classList.add('hidden');
+                calculateBtn.classList.remove('hidden');
+            } else {
+                nextBtn.classList.remove('hidden');
+                calculateBtn.classList.add('hidden');
+            }
+        }
+
+        function renderQuestion() {
+            const questionDisplay = document.getElementById('question-display');
+            const q = questions[currentStep];
+
+            // Add fade-out class for transition effect
+            questionDisplay.classList.add('fade-out');
+
+            setTimeout(() => {
+                questionDisplay.innerHTML = `
+                    <div class="p-6 bg-gray-900 rounded-xl border border-gray-700 hover:border-indigo-500 transition duration-300">
+                        <p class="text-2xl font-bold text-gray-200 mb-6">${q.icon} ${q.text}</p>
+                        <div class="space-y-4">
+                            <!-- Slider Input -->
+                            <input type="range" id="${q.id}-slider" name="${q.id}" min="0" max="3" value="${q.value}" step="1"
+                                   class="w-full h-2 rounded-lg appearance-none cursor-pointer range-lg" required
+                                   oninput="updateSliderLabel('${q.id}', this.value)">
+                            
+                            <!-- Dynamic Indicator Markers -->
+                            <div id="${q.id}-indicators" class="flex justify-between text-xs text-gray-400 font-semibold mt-1 space-x-2">
+                                <span class="level-indicator">L1</span>
+                                <span class="level-indicator">L2</span>
+                                <span class="level-indicator">L3</span>
+                                <span class="level-indicator">L4</span>
+                            </div>
+
+                            <!-- Dynamic Label (Displays chosen text description) -->
+                            <p id="${q.id}-label" class="text-center text-base font-semibold text-indigo-400 pt-3 border-t border-gray-700 mt-4 min-h-[4rem]">
+                                ${q.levels[q.value]}
+                            </p>
+                        </div>
+                    </div>
+                `;
+                
+                // Remove fade-out and add fade-in
+                questionDisplay.classList.remove('fade-out');
+                questionDisplay.classList.add('fade-in');
+                
+                // Re-initialize slider label and indicators
+                updateSliderLabel(q.id, q.value);
+
+                // Add event listener to save the value if it changes
+                const slider = document.getElementById(`${q.id}-slider`);
+                if (slider) {
+                    slider.addEventListener('input', (e) => {
+                        q.value = parseInt(e.target.value);
+                    });
+                }
+
+                updateProgress();
+
+            }, 300); // Wait for fade-out to complete
+        }
+
+        function calculateScore() {
+            let totalScore = 0;
+            questions.forEach(q => {
+                totalScore += scoreMap[q.value]; 
+            });
+            displayResult(totalScore);
+        }
+
+        function displayResult(score) {
+            const levelData = adoptionLevels.find(l => score >= l.range[0] && score <= l.range[1]);
+            const percentage = (score / 100) * 100;
+            
+            // Retrieve and check elements (Robustness check)
+            const finalScoreEl = document.getElementById('final-score');
+            const resultLevelEl = document.getElementById('result-level');
+            const levelNameFeedbackEl = document.getElementById('level-name-feedback');
+            const resultFeedbackEl = document.getElementById('result-feedback');
+            const actionTitleEl = document.getElementById('action-title');
+            const resultModalEl = document.getElementById('result-modal');
+            const scoreCoreFillEl = document.getElementById('score-core-fill');
+
+            // Update the visual core status bar
+            if (scoreCoreFillEl) {
+                scoreCoreFillEl.style.width = `${percentage}%`;
+                scoreCoreFillEl.style.backgroundColor = getCoreColor(score);
+            }
+            
+            if (finalScoreEl) finalScoreEl.textContent = score;
+            
+            if (resultLevelEl) {
+                resultLevelEl.textContent = levelData.level;
+                resultLevelEl.className = `text-2xl font-bold px-5 py-2 inline-block rounded-full shadow-xl uppercase text-white ${levelData.color}`;
+            }
+
+            if (levelNameFeedbackEl) levelNameFeedbackEl.textContent = levelData.level;
+            if (actionTitleEl) actionTitleEl.textContent = levelData.actionTitle;
+            if (resultFeedbackEl) resultFeedbackEl.textContent = levelData.feedback;
+
+            if (resultModalEl) {
+                resultModalEl.classList.remove('hidden');
+                resultModalEl.classList.add('flex');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            const calculateBtn = document.getElementById('calculate-btn');
+            const closeModalBtn = document.getElementById('close-modal-btn'); 
+
+            window.updateSliderLabel = updateSliderLabel; // Make accessible to oninput
+
+            // Initialize the first question
+            renderQuestion();
+
+            prevBtn.addEventListener('click', () => {
+                if (currentStep > 0) {
+                    currentStep--;
+                    renderQuestion();
+                }
+            });
+
+            nextBtn.addEventListener('click', () => {
+                if (currentStep < questions.length - 1) {
+                    currentStep++;
+                    renderQuestion();
+                }
+            });
+
+            calculateBtn.addEventListener('click', calculateScore);
+
+            if (closeModalBtn) {
+                closeModalBtn.addEventListener('click', () => {
+                    const resultModal = document.getElementById('result-modal');
+                    if (resultModal) {
+                        resultModal.classList.add('hidden');
+                        resultModal.classList.remove('flex');
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>
